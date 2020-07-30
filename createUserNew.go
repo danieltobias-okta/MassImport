@@ -50,11 +50,11 @@ func emitRows(f *os.File) <-chan []string {
 		for {
 			record, err := r.Read()
 			if err == io.EOF {
-				// fmt.Println("Sent EOF")
+
 				close(out)
 				break
 			} else if err != nil {
-				// writeFile(time.Now().Format("2006-01-02 15:04:05") + ` ` + err.Error())
+
 				fmt.Println(err)
 			}
 			out <- record
@@ -96,7 +96,6 @@ func formRequest(s []string, h Header, c Config, groupId string) []byte {
 
 	}
 	out += `"groupIds":["` + groupId + `"]}`
-	fmt.Println(out)
 
 	return []byte(out)
 
@@ -105,7 +104,6 @@ func formRequest(s []string, h Header, c Config, groupId string) []byte {
 func worker(rows <-chan []string, h Header, c Config, groupId string, wg *sync.WaitGroup, results chan string) {
 	client := &http.Client{}
 	defer wg.Done()
-	// fmt.Println(<-rows)
 
 	for user := range rows {
 		url := c.ORG + "/api/v1/users?activate=true"
