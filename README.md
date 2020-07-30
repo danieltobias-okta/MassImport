@@ -3,6 +3,9 @@
 ---
 
 ## Usage
+
+This utility was created using [Go 1.14](https://golang.org/dl/). You will need Go to do any of the "go run" commands or to use the delete user utility. Otherwise, you can run the binary "MassImport.exe" that I have precompiled in this repo.
+
 The program looks for a `config.json` file which accepts the following options
 
 * `MAX_CONCURRENT_SESSIONS` by default is 75, change this according to the concurrency limit for your Okta org
@@ -44,7 +47,7 @@ The program will ask if you want to create N users with a list of headers that i
 ---
 
 ## Python Utilities
-If you want to play around with the importer, I've included a folder called `pythonUtilites`. It will generate a list of N users for you. If you want to change the headers, you need to edit the `fieldnames` variable and also include how you want the program to generate these values in your `writer.writerow` function call. It will output a `users.csv` file, which you should move into the parent MassImport directory. The syntax is
+If you want to play around with the importer, I've included a folder called `pythonUtilites`. You will need [Python 3.7](https://www.python.org/downloads/) to run it. It will generate a list of N users for you. If you want to change the headers, you need to edit the `fieldnames` variable and also include how you want the program to generate these values in your `writer.writerow` function call. It will output a `users.csv` file, which you should move into the parent MassImport directory. The syntax is
 ```
 python createUsers.py N
 ```
