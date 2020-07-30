@@ -20,9 +20,6 @@ type Header struct {
 	hasPw bool
 }
 
-type Counter struct {
-	N int
-}
 
 func parseHeader(c []string) (header []string, k int, f bool) {
 
