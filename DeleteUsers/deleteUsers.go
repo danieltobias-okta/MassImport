@@ -143,10 +143,10 @@ func main() {
 		// deletedusers = nil
 
 	}
-	go func() {
-		wg.Wait()
-		close(results)
-	}()
+	//go func() {
+	//	wg.Wait()
+	//	close(results)
+	//}()
 	for _ = range results {
 		total++
 		_ = <-results
