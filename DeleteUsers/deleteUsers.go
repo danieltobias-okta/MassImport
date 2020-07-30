@@ -37,7 +37,7 @@ func worker(ids <-chan string, results chan<- int, wg *sync.WaitGroup) {
 	for id := range ids {
 		fmt.Println(id)
 		url := org + "/api/v1/users/" + id + "/lifecycle/deactivate"
-		req, err := http.NewRequest("DELETE", url, strings.NewReader(""))
+		req, err := http.NewRequest("POST", url, strings.NewReader(""))
 		if err != nil {
 			fmt.Println(err)
 		}
