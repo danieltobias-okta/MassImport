@@ -1,0 +1,9 @@
+{
+    "MAX_CONCURRENT_SESSIONS" : 75,
+    "ORG" : "",
+    "API_TOKEN" : "",
+    "CSV_FILE" : "users.csv",
+    "GROUP_ID" : "",
+    "NOTIFY" : 1,
+    "GEN_PASSWORD" : false
+}
