@@ -59,7 +59,7 @@ func main() {
 	// Use or create import group here
 	rowEmitter := emitRows(f)
 	h, ind, hasPw := parseHeader(<-rowEmitter)
-	// fmt.Println(h)
+
 	attributes := Header{h, ind, hasPw}
 
 	fmt.Println("Found profile attributes " + strings.Join(attributes.H, ", ") + ". do you wish to proceed? (y/N)")
