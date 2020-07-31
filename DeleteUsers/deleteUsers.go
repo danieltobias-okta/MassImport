@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -21,21 +22,43 @@ type DeleteUser struct {
 	Id string `json:"id"`
 }
 
+func getDelUsers(c *http.Client, groupId string, token string, org string) ([]DeleteUser, bool) {
+	var deletedusers []DeleteUser
+	url := org + "/api/v1/groups/" + groupId + "/users"
+
+	req, err := http.NewRequest("GET", url, bytes.NewBuffer([]byte("")))
+	if err != nil {
+		fmt.Println(err)
+	}
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "SSWS "+token)
+	res, _ := c.Do(req)
+	err = json.NewDecoder(res.Body).Decode(&deletedusers)
+	if len(deletedusers) == 0 {
+		return deletedusers, false
+	}
+
+	return deletedusers, true
+
+}
+
 func jobs(d []DeleteUser) <-chan string {
 	out := make(chan string)
 	go func() {
 		for _, id := range d {
 			out <- id.Id
 		}
+		close(out)
 	}()
 	return out
 }
 
-func worker(ids <-chan string, results chan<- int, wg *sync.WaitGroup) {
+func worker(ids <-chan string, wg *sync.WaitGroup) {
 	client := &http.Client{}
+
 	defer wg.Done()
 	for id := range ids {
-		fmt.Println(id)
 		url := org + "/api/v1/users/" + id + "/lifecycle/deactivate"
 		req, err := http.NewRequest("POST", url, strings.NewReader(""))
 		if err != nil {
@@ -61,7 +84,6 @@ func worker(ids <-chan string, results chan<- int, wg *sync.WaitGroup) {
 			_, _ = client.Do(req)
 		}
 		url = org + "/api/v1/users/" + id
-
 		req, err = http.NewRequest("DELETE", url, nil)
 
 		if err != nil {
@@ -87,72 +109,31 @@ func worker(ids <-chan string, results chan<- int, wg *sync.WaitGroup) {
 			req.Header.Add("Authorization", "SSWS "+token)
 
 		}
-		results <- 1
 
 	}
-	close(results)
 
 }
 
 var wg sync.WaitGroup
 
 func main() {
-	stime := time.Now()
-	url := org + "/api/v1/groups/" + groupId + "/users"
 	client := &http.Client{}
-	var deletedusers []DeleteUser
-	fmt.Println("Time to delete!")
-	results := make(chan int)
+	firstJobs, _ := getDelUsers(client, groupId, token, org)
+	job := jobs(firstJobs)
 
+	fmt.Printf("Deleting...\n")
 	total := 0
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		fmt.Println(err)
-	}
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "SSWS "+token)
-	res, _ := client.Do(req)
-	err = json.NewDecoder(res.Body).Decode(&deletedusers)
-
-	for len(deletedusers) != 0 {
-
-		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			fmt.Println(err)
+	for len(firstJobs) > 0 {
+		for i := 0; i < n; i++ {
+			wg.Add(1)
+			go worker(job, &wg)
 		}
-		req.Header.Add("Accept", "application/json")
-		req.Header.Add("Content-Type", "application/json")
-		req.Header.Add("Authorization", "SSWS "+token)
-		res, _ := client.Do(req)
-		if res.StatusCode == 429 {
-			rest := res.Header.Get("X-Rate-Limit-Reset")
-			resttime, _ := strconv.ParseInt(rest, 10, 64)
-			ctime := time.Now().Unix()
-			time.Sleep(time.Duration(resttime-ctime) * time.Second)
-
-		} else {
-			err = json.NewDecoder(res.Body).Decode(&deletedusers)
-			jobEmitter := jobs(deletedusers)
-			for x := 0; x < n; x++ {
-				wg.Add(1)
-				go worker(jobEmitter, results, &wg)
-			}
-		}
-
-		// deletedusers = nil
-
+		wg.Wait()
+		total += len(firstJobs)
+		fmt.Printf("Deleted %d\n", total)
+		firstJobs, _ = getDelUsers(client, groupId, token, org)
+		job = jobs(firstJobs)
 	}
-	//go func() {
-	//	wg.Wait()
-	//	close(results)
-	//}()
-	for _ = range results {
-		total++
-		_ = <-results
-		fmt.Printf("Deleted %d users.\n", total)
-	}
-
-	fmt.Println("Completed " + time.Since(stime).String())
+	fmt.Printf("Deleted %d Okta users\n", total)
 
 }
