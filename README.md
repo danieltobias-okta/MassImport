@@ -17,7 +17,7 @@ The program looks for a `config.json` file which accepts the following options
 * `GEN_PASSWORD` add `"GEN_PASSWORD" = true` if you would like Okta to create temporary passwords and email your users to activate their accounts. You do **not** need to include a 'password' header in the csv if you choose this option. In fact, make sure not to include it
 
 ### Csv file formatting
-The csv file should be formatted with each profile attribute you want to create users with in the first row. Each column will belong to a single attribute. Each row thereafter will define the values for each user. These values are assumed to be strings. The program will load the entire csv into memory, so be ready.
+The csv file should be formatted with each profile attribute you want to create users with in the first row. Each column will belong to a single attribute. Each row thereafter will define the values for each user. These values are assumed to be strings. If you include a "password" column, make sure you have `"GEN_PASSWORD" = false` in your `config.json`.
 
 ---
 
