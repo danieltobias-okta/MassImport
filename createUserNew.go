@@ -101,10 +101,10 @@ func formRequest(s []string, h Header, c Config, groupId string) []byte {
 
 }
 
-func worker(rows <-chan []string, h Header, c Config, groupId string, wg *sync.WaitGroup, results chan string) {
+ffunc worker(rows <-chan []string, h Header, c Config, groupId string, wg *sync.WaitGroup, results chan string) {
 	client := &http.Client{}
 	defer wg.Done()
-
+	var newRate, limit, rem int
 	for user := range rows {
 		url := c.ORG + "/api/v1/users?activate=true"
 		if c.GEN_PASSWORD {
@@ -118,9 +118,21 @@ func worker(rows <-chan []string, h Header, c Config, groupId string, wg *sync.W
 		}
 		prepareRequest(req, c.API_TOKEN)
 		res, err := client.Do(req)
+		limit, _ = strconv.Atoi(res.Header["X-Rate-Limit-Limit"][0])
+		rem, _ = strconv.Atoi(res.Header["X-Rate-Limit-Remaining"][0])
+		newRate = int(float32(c.SPEED) / float32(100) * float32(limit))
+		if newRate < 1 {
+			newRate = 1
+		}
+
+		if rem < (limit-newRate) && c.SPEED != 100 {
+			rest, _ := strconv.ParseInt(res.Header.Get("X-Rate-Limit-Reset"), 10, 64)
+			time.Sleep(time.Duration(rest-time.Now().Unix()+3) * time.Second)
+		}
+
 		if res.StatusCode == 429 {
 			rest, _ := strconv.ParseInt(res.Header.Get("X-Rate-Limit-Reset"), 10, 64)
-			time.Sleep(time.Duration(rest-time.Now().Unix()+1) * time.Second)
+			time.Sleep(time.Duration(rest-time.Now().Unix()+3) * time.Second)
 			req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
 			if err != nil {
 				fmt.Println(err)
