@@ -20,7 +20,7 @@ type Config struct {
 	NOTIFY                  int
 	Password                int
 	GEN_PASSWORD            bool
-	SPEED	int
+	SPEED                   int
 }
 
 type Profile struct {
