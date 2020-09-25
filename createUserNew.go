@@ -20,7 +20,6 @@ type Header struct {
 	hasPw bool
 }
 
-
 func parseHeader(c []string) (header []string, k int, f bool) {
 
 	i, found := Find("password", c)
@@ -101,7 +100,7 @@ func formRequest(s []string, h Header, c Config, groupId string) []byte {
 
 }
 
-ffunc worker(rows <-chan []string, h Header, c Config, groupId string, wg *sync.WaitGroup, results chan string) {
+func worker(rows <-chan []string, h Header, c Config, groupId string, wg *sync.WaitGroup, results chan string) {
 	client := &http.Client{}
 	defer wg.Done()
 	var newRate, limit, rem int
