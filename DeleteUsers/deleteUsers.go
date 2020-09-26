@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -33,8 +34,11 @@ func getDelUsers(c *http.Client, groupId string, token string, org string) ([]De
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "SSWS "+token)
+	req.Header.Add("Accept-Encoding", "gzip")
 	res, _ := c.Do(req)
-	err = json.NewDecoder(res.Body).Decode(&deletedusers)
+	reader, err := gzip.NewReader(res.Body)
+
+	err = json.NewDecoder(reader).Decode(&deletedusers)
 	if len(deletedusers) == 0 {
 		return deletedusers, false
 	}
@@ -81,6 +85,7 @@ func worker(ids <-chan string, wg *sync.WaitGroup) {
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Add("Accept", "application/json")
 			req.Header.Add("Authorization", "SSWS "+token)
+			req.Header.Add("Accept-Encoding", "gzip")
 			_, _ = client.Do(req)
 		}
 		url = org + "/api/v1/users/" + id
