@@ -117,16 +117,19 @@ func worker(rows <-chan []string, h Header, c Config, groupId string, wg *sync.W
 		}
 		prepareRequest(req, c.API_TOKEN)
 		res, err := client.Do(req)
-		limit, _ = strconv.Atoi(res.Header["X-Rate-Limit-Limit"][0])
-		rem, _ = strconv.Atoi(res.Header["X-Rate-Limit-Remaining"][0])
-		newRate = int(float32(c.SPEED) / float32(100) * float32(limit))
-		if newRate < 1 {
-			newRate = 1
-		}
+		
 
-		if rem < (limit-newRate) && c.SPEED != 100 {
-			rest, _ := strconv.ParseInt(res.Header.Get("X-Rate-Limit-Reset"), 10, 64)
-			time.Sleep(time.Duration(rest-time.Now().Unix()+3) * time.Second)
+		if c.SPEED != 100 {
+			limit, _ = strconv.Atoi(res.Header["X-Rate-Limit-Limit"][0])
+			rem, _ = strconv.Atoi(res.Header["X-Rate-Limit-Remaining"][0])
+			newRate = int(float32(c.SPEED) / float32(100) * float32(limit))
+			if newRate < 1 {
+				newRate = 1
+			}
+			if rem < (limit-newRate) {
+				rest, _ := strconv.ParseInt(res.Header.Get("X-Rate-Limit-Reset"), 10, 64)
+				time.Sleep(time.Duration(rest-time.Now().Unix()+3) * time.Second)
+			}
 		}
 
 		if res.StatusCode == 429 {
