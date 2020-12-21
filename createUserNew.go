@@ -101,7 +101,7 @@ func formRequest(s []string, h Header, c Config, groupId string) []byte {
 }
 
 func worker(rows <-chan []string, h Header, c Config, groupId string, wg *sync.WaitGroup, results chan string) {
-	client := &http.Client{}
+	client := &http.Client{Timeout: time.Second * 120}
 	defer wg.Done()
 	var newRate, limit, rem int
 	for user := range rows {
@@ -117,6 +117,11 @@ func worker(rows <-chan []string, h Header, c Config, groupId string, wg *sync.W
 		}
 		prepareRequest(req, c.API_TOKEN)
 		res, err := client.Do(req)
+		if err != nil {
+			fmt.Println(err)
+			writeFile(time.Now().Format("2006-01-02 15:04:05") + ` ` + err.Error())
+			_,_ = client.Do(req)
+		}
 		
 
 		if c.SPEED != 100 {
@@ -138,10 +143,15 @@ func worker(rows <-chan []string, h Header, c Config, groupId string, wg *sync.W
 			req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
 			if err != nil {
 				fmt.Println(err)
-				writeFile(time.Now().Format("2006-01-02 15:04:05") + ` ` + err.Error())
+				writeFile(time.Now().Format("2006-01-02 15:04:05") + " Failed user " + strings.Join(user, ", "))
 			}
 			prepareRequest(req, c.API_TOKEN)
-			_, _ = client.Do(req)
+			_, err = client.Do(req)
+			if err != nil {
+				fmt.Println(err)
+				writeFile(time.Now().Format("2006-01-02 15:04:05") + " Failed user " + strings.Join(user, ", "))
+				_,_ = client.Do(req)
+			}
 
 		} else {
 			if res.StatusCode != 200 {
